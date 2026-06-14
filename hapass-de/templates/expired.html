@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Zugang abgelaufen — {{ app_name }}{% endblock %}
+
+{% block head_extra %}
+<meta name="theme-color" content="{{ brand_bg }}" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="{{ brand_bg_dark }}" media="(prefers-color-scheme: dark)">
+{% endblock %}
+
+{% block body_attrs %}class="bg-bg-light dark:bg-bg-dark text-soot dark:text-gray-100 font-sans antialiased min-h-dvh flex items-center justify-center text-center p-8"{% endblock %}
+
+{% block body %}
+  <noscript>
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;font-family:sans-serif;">
+      <p>JavaScript wird benötigt, um diese App zu nutzen.</p>
+    </div>
+  </noscript>
+  <div>
+    <img src="https://www.sv-langschede.de/wp-content/uploads/2020/01/cropped-SV-DIGITAL_kreis_4c_trans-01.png"
+         alt="SV Langschede 1911 e.V."
+         class="w-20 h-20 rounded-full mx-auto mb-4 object-cover bg-black"
+         onerror="this.style.display='none'">
+    <p class="text-xs font-mono uppercase tracking-widest text-muted mb-6">SV Langschede 1911 e.V.</p>
+    <div class="w-16 h-16 rounded-full bg-soot/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+      <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">timer_off</span>
+    </div>
+    <h1 class="text-2xl font-serif tracking-tight mb-2">Zugang abgelaufen</h1>
+    <p class="text-muted text-base leading-relaxed max-w-xs mx-auto">Diese Gastsitzung ist beendet oder der Link ist nicht mehr gültig. {{ contact_message }}</p>
+  </div>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ base_path }}/static/theme.js"></script>
+{% endblock %}

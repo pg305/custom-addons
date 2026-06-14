@@ -1,0 +1,35 @@
+name: HAPass Deutsch
+version: "0.2.4"
+slug: ha-pass-de
+description: Teilbare Gäste-Links zur Steuerung von Home Assistant Geräten (Deutsche Version)
+url: "https://github.com/rohithkadaveru/ha-pass"
+arch: [amd64, aarch64]
+startup: application
+boot: auto
+homeassistant_api: true
+ingress: true
+ingress_port: 5880
+panel_icon: "mdi:shield-key"
+panel_title: "HAPass DE"
+webui: "http://[HOST]:[PORT:5881]/admin/dashboard"
+ports:
+  "5881/tcp": 5880
+ports_description:
+  "5881/tcp": "HAPass Gäste-Links (Direktzugriff)"
+backup: cold
+options:
+  admin_username: ""
+  admin_password: ""
+  app_name: "SV Langschede 1911 e.V."
+  contact_message: "Bitte wende dich an den Verein für einen neuen Link."
+  brand_bg: "#F8F7F2"
+  brand_primary: "#F5C400"
+  guest_url: ""
+schema:
+  admin_username: "str?"
+  admin_password: "password?"
+  app_name: str
+  contact_message: str
+  brand_bg: str
+  brand_primary: str
+  guest_url: "str?"
