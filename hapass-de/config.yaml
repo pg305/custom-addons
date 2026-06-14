@@ -1,5 +1,5 @@
 name: HAPass Deutsch
-version: "0.4.2"
+version: "0.4.3"
 slug: ha-pass-de
 description: Teilbare Gäste-Links zur Steuerung von Home Assistant Geräten (Deutsche Version)
 url: "https://github.com/rohithkadaveru/ha-pass"

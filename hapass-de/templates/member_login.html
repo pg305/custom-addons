@@ -118,6 +118,7 @@ form.addEventListener('submit', async e => {
       body: JSON.stringify({ username, password }),
     });
     if (r.ok) {
+      const data = await r.json().catch(() => ({}));
       window.location.href = '/me';
       return;
     }

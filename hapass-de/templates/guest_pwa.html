@@ -198,6 +198,48 @@
 
 <!-- Toast container -->
 <div id="toast-container" aria-live="polite" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2"></div>
+
+{% if is_member %}
+<!-- Optional password-change modal (shown once for new members) -->
+<div id="pw-modal-backdrop" class="hidden fixed inset-0 z-[60] bg-soot/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+     role="dialog" aria-modal="true" aria-labelledby="pw-modal-title">
+  <div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-7 w-full max-w-sm shadow-xl border border-border-light dark:border-border-dark">
+    <div class="flex justify-center mb-4">
+      <div class="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center">
+        <span aria-hidden="true" class="material-symbols-outlined text-accent text-2xl">lock_reset</span>
+      </div>
+    </div>
+    <h3 id="pw-modal-title" class="text-lg font-serif text-center mb-1">Eigenes Passwort setzen?</h3>
+    <p class="text-xs text-muted text-center mb-5">Du kannst jetzt ein persönliches Passwort festlegen oder dein bisheriges behalten.</p>
+
+    <div class="space-y-3">
+      <div>
+        <label for="pw-modal-new" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Neues Passwort</label>
+        <input id="pw-modal-new" type="password" autocomplete="new-password"
+          placeholder="Min. 6 Zeichen, Groß- und Kleinbuchstabe"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div>
+        <label for="pw-modal-confirm" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Wiederholen</label>
+        <input id="pw-modal-confirm" type="password" autocomplete="new-password"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20">
+      </div>
+      <p class="text-[11px] text-muted">Dein Passwort wird verschlüsselt gespeichert.</p>
+    </div>
+
+    <p id="pw-modal-error" role="alert" class="hidden text-xs text-primary text-center mt-3 font-medium"></p>
+
+    <button id="pw-modal-save"
+      class="mt-5 w-full py-3 rounded-xl bg-primary text-white text-sm font-display font-semibold active:scale-[0.98] transition-transform">
+      Passwort setzen
+    </button>
+    <button id="pw-modal-skip"
+      class="mt-2 w-full py-2.5 rounded-xl text-sm text-muted font-display hover:bg-soot/5 dark:hover:bg-white/5 transition-colors">
+      Beim gegebenen Passwort bleiben
+    </button>
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block body_scripts %}
@@ -1007,7 +1049,75 @@ if ('serviceWorker' in navigator) {
   if (!('{{ base_path }}')) navigator.serviceWorker.register('/static/sw.js').catch(() => {});
 }
 
+{% if is_member %}
+// ── Optional password-change modal ───────────────────────────────────
+const MUST_CHANGE_PASSWORD = {{ 'true' if must_change_password else 'false' }};
+
+function showPasswordModal() {
+  const backdrop = document.getElementById('pw-modal-backdrop');
+  if (!backdrop) return;
+  backdrop.classList.remove('hidden');
+  const firstInput = backdrop.querySelector('input');
+  if (firstInput) setTimeout(() => firstInput.focus(), 50);
+}
+
+function hidePasswordModal() {
+  const backdrop = document.getElementById('pw-modal-backdrop');
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function validateModalPassword() {
+  const pw = document.getElementById('pw-modal-new').value;
+  const conf = document.getElementById('pw-modal-confirm').value;
+  const errEl = document.getElementById('pw-modal-error');
+  if (pw.length < 6) { errEl.textContent = 'Mindestens 6 Zeichen erforderlich'; errEl.classList.remove('hidden'); return false; }
+  if (!/[A-Z]/.test(pw)) { errEl.textContent = 'Mindestens ein Großbuchstabe erforderlich'; errEl.classList.remove('hidden'); return false; }
+  if (!/[a-z]/.test(pw)) { errEl.textContent = 'Mindestens ein Kleinbuchstabe erforderlich'; errEl.classList.remove('hidden'); return false; }
+  if (pw !== conf) { errEl.textContent = 'Passwörter stimmen nicht überein'; errEl.classList.remove('hidden'); return false; }
+  errEl.classList.add('hidden');
+  return true;
+}
+
+document.getElementById('pw-modal-save')?.addEventListener('click', async () => {
+  if (!validateModalPassword()) return;
+  const pw = document.getElementById('pw-modal-new').value;
+  const conf = document.getElementById('pw-modal-confirm').value;
+  const errEl = document.getElementById('pw-modal-error');
+  const btn = document.getElementById('pw-modal-save');
+  btn.disabled = true;
+  btn.textContent = 'Speichern…';
+  try {
+    const r = await fetch('/me/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw, password_confirm: conf }),
+    });
+    if (r.ok) { hidePasswordModal(); return; }
+    const data = await r.json().catch(() => ({}));
+    errEl.textContent = data.detail || 'Fehler beim Speichern';
+    errEl.classList.remove('hidden');
+  } catch {
+    errEl.textContent = 'Verbindungsfehler';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Passwort setzen';
+  }
+});
+
+document.getElementById('pw-modal-skip')?.addEventListener('click', async () => {
+  const btn = document.getElementById('pw-modal-skip');
+  btn.disabled = true;
+  try { await fetch('/me/skip-password-change', { method: 'POST' }); } catch {}
+  hidePasswordModal();
+  btn.disabled = false;
+});
+{% endif %}
+
 init();
 showInstallBanner();
+{% if is_member %}
+if (MUST_CHANGE_PASSWORD) showPasswordModal();
+{% endif %}
 </script>
 {% endblock %}

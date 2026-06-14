@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.3] – 2026-06-15
+
+### Neu: Optionaler Passwortdialog bei Erstanmeldung
+
+- Neues Mitglieder werden nach dem ersten Login nicht mehr auf eine separate Seite weitergeleitet
+- Stattdessen erscheint ein Dialog-Overlay auf der Geräteansicht: **"Eigenes Passwort setzen?"**
+  - "Passwort setzen": Mindestens 6 Zeichen, ein Groß- und ein Kleinbuchstabe erforderlich
+  - "Beim gegebenen Passwort bleiben": Bestehendes Passwort wird behalten, Flag wird gelöscht
+- Beide Optionen löschen das `must_change_password`-Flag, sodass der Dialog nie wieder erscheint
+- Passwort-Validierung auf dem Server erweitert: Groß- und Kleinbuchstaben werden jetzt explizit geprüft
+- Neue API-Endpunkte: `POST /me/skip-password-change`
+- Neue DB-Funktion: `clear_must_change_password`
+
+---
+
 ## [0.4.2] – 2026-06-14
 
 ### Bugfix

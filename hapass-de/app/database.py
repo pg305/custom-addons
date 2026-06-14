@@ -317,7 +317,7 @@ async def create_member(username: str, password_hash: str, template_id: str | No
     member_id = str(uuid.uuid4())
     now = int(time.time())
     await db.execute(
-        "INSERT INTO members (id, username, password_hash, template_id, active, created_at) VALUES (?, ?, ?, ?, 1, ?)",
+        "INSERT INTO members (id, username, password_hash, template_id, active, must_change_password, created_at) VALUES (?, ?, ?, ?, 1, 1, ?)",
         (member_id, username, password_hash, template_id, now),
     )
     await db.commit()
@@ -383,6 +383,24 @@ async def delete_member(member_id: str) -> None:
     await db.commit()
 
 
+async def set_member_password(member_id: str, password_hash: str) -> None:
+    db = await get_db()
+    await db.execute(
+        "UPDATE members SET password_hash = ?, must_change_password = 0 WHERE id = ?",
+        (password_hash, member_id),
+    )
+    await db.commit()
+
+
+async def clear_must_change_password(member_id: str) -> None:
+    db = await get_db()
+    await db.execute(
+        "UPDATE members SET must_change_password = 0 WHERE id = ?",
+        (member_id,),
+    )
+    await db.commit()
+
+
 # ---------------------------------------------------------------------------
 # Member sessions
 # ---------------------------------------------------------------------------
@@ -405,7 +423,7 @@ async def create_member_session(member_id: str) -> str:
 async def get_member_session(session_id: str) -> aiosqlite.Row | None:
     db = await get_db()
     async with db.execute(
-        """SELECT ms.*, m.id AS member_id, m.username, m.template_id, m.active
+        """SELECT ms.*, m.id AS member_id, m.username, m.template_id, m.active, m.must_change_password
            FROM member_sessions ms
            JOIN members m ON m.id = ms.member_id
            WHERE ms.id = ? AND ms.expires_at > ?""",

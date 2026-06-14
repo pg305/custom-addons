@@ -17,6 +17,7 @@ from app import database as db
 from app import ha_client
 from app.config import settings
 from app.context import base_context
+from pydantic import BaseModel
 from app.models import (
     ALLOWED_SERVICES,
     CommandRequest,
@@ -152,7 +153,7 @@ async def member_login(body: MemberLoginRequest, request: Request, response: Res
         secure=is_https,
         max_age=db.MEMBER_SESSION_TTL,
     )
-    return {"ok": True, "username": member["username"]}
+    return {"ok": True, "username": member["username"], "must_change_password": bool(member["must_change_password"])}
 
 
 @router.post("/member/logout")
@@ -165,6 +166,64 @@ async def member_logout(request: Request, response: Response) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Passwort ändern (Pflicht beim ersten Login)
+# ---------------------------------------------------------------------------
+
+class ChangePasswordRequest(BaseModel):
+    password: str
+    password_confirm: str
+
+
+@router.get("/me/change-password", response_class=HTMLResponse)
+async def change_password_page(request: Request):
+    row, _ = await _get_member_from_request(request)
+    if not row:
+        return RedirectResponse(url="/", status_code=302)
+    ctx = base_context(request)
+    ctx.update({"username": row["username"], "contact_message": settings.contact_message})
+    return templates.TemplateResponse(request, "member_change_password.html", ctx)
+
+
+@router.post("/me/change-password")
+async def change_password(request: Request) -> dict:
+    row, _ = await _get_member_from_request(request)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    body = await request.json()
+    password = body.get("password", "")
+    password_confirm = body.get("password_confirm", "")
+
+    if len(password) < 6:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Passwort muss mindestens 6 Zeichen haben")
+    if not any(c.isupper() for c in password):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Passwort muss mindestens einen Großbuchstaben enthalten")
+    if not any(c.islower() for c in password):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Passwort muss mindestens einen Kleinbuchstaben enthalten")
+    if password != password_confirm:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Passwörter stimmen nicht überein")
+
+    pw_hash = await _hash_bcrypt(password)
+    await db.set_member_password(row["member_id"], pw_hash)
+    return {"ok": True}
+
+
+@router.post("/me/skip-password-change")
+async def skip_password_change(request: Request) -> dict:
+    """Member keeps the current password — just clear the must_change flag."""
+    row, _ = await _get_member_from_request(request)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    await db.clear_must_change_password(row["member_id"])
+    return {"ok": True}
+
+
+async def _hash_bcrypt(plain: str) -> str:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode())
+
+
+# ---------------------------------------------------------------------------
 # Member PWA — same UX as guest PWA, label = username
 # ---------------------------------------------------------------------------
 
@@ -172,7 +231,7 @@ async def member_logout(request: Request, response: Response) -> dict:
 async def member_pwa(request: Request):
     row, _ = await _get_member_from_request(request)
     if not row:
-        return RedirectResponse(url=f"{request.state.ingress_path}/", status_code=302)
+        return RedirectResponse(url="/", status_code=302)
 
     ctx = base_context(request)
     ctx.update({
@@ -183,6 +242,7 @@ async def member_pwa(request: Request):
         "never_expires": NEVER_EXPIRES_SECONDS,
         "api_base": "/me",
         "is_member": True,
+        "must_change_password": bool(row["must_change_password"]),
     })
     return templates.TemplateResponse(request, "guest_pwa.html", ctx)
 
