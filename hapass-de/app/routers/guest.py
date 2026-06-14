@@ -219,6 +219,8 @@ async def guest_pwa(background_tasks: BackgroundTasks, request: Request, slug: s
         "expires_at": row["expires_at"],
         "contact_message": settings.contact_message,
         "never_expires": NEVER_EXPIRES_SECONDS,
+        "api_base": f"/g/{slug}",
+        "is_member": False,
     })
     return templates.TemplateResponse(request, "guest_pwa.html", ctx)
 

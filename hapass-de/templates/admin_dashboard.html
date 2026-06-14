@@ -102,54 +102,101 @@
     </div>
   </header>
 
-  <main class="max-w-4xl mx-auto px-5 py-6">
-    <h2 class="sr-only">Gast-Token</h2>
-    <!-- Create Token Button -->
-    <button data-action="open-create-modal" class="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-display font-semibold text-sm transition-colors flex items-center justify-center gap-2 mb-6 shadow-lg shadow-primary/20">
-      <span aria-hidden="true" class="material-symbols-outlined text-lg">add_circle</span>
-      Token erstellen
-    </button>
+  <!-- Tab Navigation -->
+  <div class="border-b border-border-light dark:border-border-dark bg-surface-light/50 dark:bg-surface-dark/50">
+    <div class="max-w-4xl mx-auto px-5 flex gap-1 pt-1">
+      <button data-tab="tokens" data-action="switch-tab" class="tab-btn px-4 py-2.5 text-sm font-display font-medium border-b-2 transition-colors border-primary text-primary">
+        <span aria-hidden="true" class="material-symbols-outlined text-sm align-middle mr-1">key</span>Gast-Token
+      </button>
+      <button data-tab="members" data-action="switch-tab" class="tab-btn px-4 py-2.5 text-sm font-display font-medium border-b-2 transition-colors border-transparent text-muted hover:text-soot dark:hover:text-white">
+        <span aria-hidden="true" class="material-symbols-outlined text-sm align-middle mr-1">group</span>Mitglieder
+      </button>
+      <button data-tab="templates" data-action="switch-tab" class="tab-btn px-4 py-2.5 text-sm font-display font-medium border-b-2 transition-colors border-transparent text-muted hover:text-soot dark:hover:text-white">
+        <span aria-hidden="true" class="material-symbols-outlined text-sm align-middle mr-1">dashboard_customize</span>Templates
+      </button>
+    </div>
+  </div>
 
-    <!-- Stats Row -->
-    <div class="grid grid-cols-2 gap-3 mb-6" id="stats-row">
-      <div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-border-light dark:border-border-dark shadow-card">
-        <div class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted mb-1">
-          <span aria-hidden="true" class="material-symbols-outlined text-base text-ink">verified</span>
-          Aktiv
+  <main class="max-w-4xl mx-auto px-5 py-6">
+
+    <!-- ===== TAB: TOKENS ===== -->
+    <div id="tab-tokens">
+      <h2 class="sr-only">Gast-Token</h2>
+      <button data-action="open-create-modal" class="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-display font-semibold text-sm transition-colors flex items-center justify-center gap-2 mb-6 shadow-lg shadow-primary/20">
+        <span aria-hidden="true" class="material-symbols-outlined text-lg">add_circle</span>
+        Token erstellen
+      </button>
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 gap-3 mb-6" id="stats-row">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-border-light dark:border-border-dark shadow-card">
+          <div class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted mb-1">
+            <span aria-hidden="true" class="material-symbols-outlined text-base text-ink">verified</span>
+            Aktiv
+          </div>
+          <div class="text-2xl font-serif" id="stat-active">0</div>
         </div>
-        <div class="text-2xl font-serif" id="stat-active">0</div>
-      </div>
-      <div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-border-light dark:border-border-dark shadow-card">
-        <div class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted mb-1">
-          <span aria-hidden="true" class="material-symbols-outlined text-base text-muted">timer_off</span>
-          Abgelaufen
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 border border-border-light dark:border-border-dark shadow-card">
+          <div class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted mb-1">
+            <span aria-hidden="true" class="material-symbols-outlined text-base text-muted">timer_off</span>
+            Abgelaufen
+          </div>
+          <div class="text-2xl font-serif" id="stat-expired">0</div>
         </div>
-        <div class="text-2xl font-serif" id="stat-expired">0</div>
       </div>
+
+      <section class="mb-6" aria-labelledby="activity-heading">
+        <div class="flex items-center justify-between mb-3">
+          <h2 id="activity-heading" class="text-xs font-mono uppercase tracking-wider text-muted">Letzte Aktivität</h2>
+          <div class="flex items-center gap-2">
+            <button id="activity-toggle" data-action="toggle-activity" aria-expanded="false" class="hidden h-8 px-3 items-center gap-1 rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors text-xs font-display font-medium">
+              <span id="activity-toggle-label">Alle anzeigen</span>
+              <span id="activity-toggle-icon" aria-hidden="true" class="material-symbols-outlined text-base">expand_more</span>
+            </button>
+            <button data-action="refresh-activity" class="w-8 h-8 flex items-center justify-center rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors" aria-label="Aktivität aktualisieren">
+              <span aria-hidden="true" class="material-symbols-outlined text-base">refresh</span>
+            </button>
+          </div>
+        </div>
+        <ul id="activity-list" role="list" class="space-y-2 list-none">
+          <li class="text-center py-6 text-sm text-muted">Wird geladen...</li>
+        </ul>
+      </section>
+
+      <ul id="token-grid" role="list" class="space-y-3 list-none">
+        <li class="text-center py-12 text-muted">Wird geladen...</li>
+      </ul>
     </div>
 
-    <section class="mb-6" aria-labelledby="activity-heading">
-      <div class="flex items-center justify-between mb-3">
-        <h2 id="activity-heading" class="text-xs font-mono uppercase tracking-wider text-muted">Letzte Aktivität</h2>
-        <div class="flex items-center gap-2">
-          <button id="activity-toggle" data-action="toggle-activity" aria-expanded="false" class="hidden h-8 px-3 items-center gap-1 rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors text-xs font-display font-medium">
-            <span id="activity-toggle-label">Alle anzeigen</span>
-            <span id="activity-toggle-icon" aria-hidden="true" class="material-symbols-outlined text-base">expand_more</span>
-          </button>
-          <button data-action="refresh-activity" class="w-8 h-8 flex items-center justify-center rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors" aria-label="Aktivität aktualisieren">
-            <span aria-hidden="true" class="material-symbols-outlined text-base">refresh</span>
-          </button>
-        </div>
+    <!-- ===== TAB: MEMBERS ===== -->
+    <div id="tab-members" class="hidden">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Vereinsmitglieder</h2>
+        <button data-action="open-create-member-modal" class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-display font-semibold text-sm transition-colors flex items-center gap-1.5 shadow-lg shadow-primary/20">
+          <span aria-hidden="true" class="material-symbols-outlined text-base">person_add</span>
+          Mitglied hinzufügen
+        </button>
       </div>
-      <ul id="activity-list" role="list" class="space-y-2 list-none">
-        <li class="text-center py-6 text-sm text-muted">Wird geladen...</li>
+      <ul id="member-list" role="list" class="space-y-3 list-none">
+        <li class="text-center py-12 text-muted">Wird geladen...</li>
       </ul>
-    </section>
+    </div>
 
-    <!-- Token List -->
-    <ul id="token-grid" role="list" class="space-y-3 list-none">
-      <li class="text-center py-12 text-muted">Wird geladen...</li>
-    </ul>
+    <!-- ===== TAB: TEMPLATES ===== -->
+    <div id="tab-templates" class="hidden">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-muted">Geräte-Templates</h2>
+        <button data-action="open-create-template-modal" class="h-9 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-display font-semibold text-sm transition-colors flex items-center gap-1.5 shadow-lg shadow-primary/20">
+          <span aria-hidden="true" class="material-symbols-outlined text-base">add_circle</span>
+          Template erstellen
+        </button>
+      </div>
+      <p class="text-xs text-muted mb-4">Templates definieren Gerätelisten und Wochentage, die dann Mitgliedern zugewiesen werden können.</p>
+      <ul id="template-list" role="list" class="space-y-3 list-none">
+        <li class="text-center py-12 text-muted">Wird geladen...</li>
+      </ul>
+    </div>
+
   </main>
 </div>
 
@@ -317,6 +364,91 @@
   </div>
 </div>
 
+<!-- Create/Edit Template Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-soot/40 dark:bg-black/50 backdrop-blur-sm" id="template-modal">
+  <div class="modal-animate bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl" role="dialog" aria-modal="true" aria-labelledby="template-modal-title">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="template-modal-title" class="text-lg font-serif">Template erstellen</h2>
+      <button data-action="close-modal" data-modal="template" aria-label="Dialog schließen" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors">
+        <span aria-hidden="true" class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <input type="hidden" id="tpl-id">
+      <div>
+        <label for="tpl-name" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Name</label>
+        <input id="tpl-name" type="text" required placeholder="z.B. Trainer"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Erlaubte Wochentage <span class="text-muted/60 normal-case tracking-normal">(leer = alle Tage)</span></label>
+        <div id="tpl-weekdays" class="flex gap-1.5 flex-wrap">
+          <button type="button" data-action="toggle-tpl-weekday" data-day="0" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Mo</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="1" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Di</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="2" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Mi</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="3" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Do</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="4" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Fr</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="5" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">Sa</button>
+          <button type="button" data-action="toggle-tpl-weekday" data-day="6" class="tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border border-border-light dark:border-border-dark text-muted hover:border-primary transition-colors">So</button>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Geräte</label>
+        <div id="template-picker"></div>
+      </div>
+    </div>
+    <div id="template-error" role="alert" class="text-primary text-xs min-h-[18px] mt-2"></div>
+    <div class="flex justify-end gap-2 mt-5 pt-4 border-t border-border-light dark:border-border-dark">
+      <button data-action="close-modal" data-modal="template" class="px-4 py-2 text-sm font-display font-medium rounded-xl border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 transition-colors">Abbrechen</button>
+      <button data-action="submit-template" id="template-submit-btn" class="px-4 py-2 text-sm font-display font-semibold rounded-xl bg-primary hover:bg-primary-hover text-white transition-colors">Erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Member Modal -->
+<div class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-soot/40 dark:bg-black/50 backdrop-blur-sm" id="member-modal">
+  <div class="modal-animate bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-2xl p-6 w-full max-w-md shadow-xl" role="dialog" aria-modal="true" aria-labelledby="member-modal-title">
+    <div class="flex items-center justify-between mb-5">
+      <h2 id="member-modal-title" class="text-lg font-serif">Mitglied anlegen</h2>
+      <button data-action="close-modal" data-modal="member" aria-label="Dialog schließen" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-soot/5 dark:hover:bg-white/5 text-muted transition-colors">
+        <span aria-hidden="true" class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <input type="hidden" id="member-id">
+      <div>
+        <label for="member-username" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Benutzername</label>
+        <input id="member-username" type="text" required autocomplete="off"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div>
+        <label for="member-password" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
+          Passwort <span id="member-pw-hint" class="text-muted/60 normal-case tracking-normal">(leer lassen = nicht ändern)</span>
+        </label>
+        <input id="member-password" type="password" autocomplete="new-password" minlength="6"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div>
+        <label for="member-template" class="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">Template</label>
+        <select id="member-template"
+          class="w-full px-3 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-bg-light dark:bg-bg-dark text-sm outline-none focus:border-primary cursor-pointer">
+          <option value="">— Kein Template —</option>
+        </select>
+      </div>
+      <div id="member-active-row" class="hidden flex items-center justify-between">
+        <span class="text-sm">Konto aktiv</span>
+        <div class="toggle-track" role="switch" aria-checked="true" tabindex="0" id="member-active-toggle" data-action="toggle-member-active">
+        </div>
+      </div>
+    </div>
+    <div id="member-error" role="alert" class="text-primary text-xs min-h-[18px] mt-2"></div>
+    <div class="flex justify-end gap-2 mt-5 pt-4 border-t border-border-light dark:border-border-dark">
+      <button data-action="close-modal" data-modal="member" class="px-4 py-2 text-sm font-display font-medium rounded-xl border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 transition-colors">Abbrechen</button>
+      <button data-action="submit-member" id="member-submit-btn" class="px-4 py-2 text-sm font-display font-semibold rounded-xl bg-primary hover:bg-primary-hover text-white transition-colors">Erstellen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast Container -->
 <div id="toast-container" aria-live="polite" class="fixed bottom-5 right-5 z-[200] flex flex-col gap-2"></div>
 {% endblock %}
@@ -426,12 +558,287 @@ function showApp() {
   loadTokens();
   loadActivity();
   loadEntities();
+  loadTemplates();
+  loadMembers();
   startAutoRefresh();
   requestAnimationFrame(updateThemeToggles);
 }
 
 document.getElementById('l-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('l-pass').focus(); });
 document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── Tab Navigation ────────────────────────────────────────────────────
+let activeTab = 'tokens';
+function switchTab(tab) {
+  activeTab = tab;
+  ['tokens', 'members', 'templates'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tab;
+    btn.className = `tab-btn px-4 py-2.5 text-sm font-display font-medium border-b-2 transition-colors ${
+      isActive ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-soot dark:hover:text-white'
+    }`;
+  });
+}
+
+// ── Templates ─────────────────────────────────────────────────────────
+let templates_data = [];
+let templatePicker = { selected: new Set(), filter: 'all', search: '' };
+let selectedTplWeekdays = new Set();
+let editingTemplateId = null;
+
+async function loadTemplates() {
+  const r = await fetch(`${BASE}/admin/templates`);
+  if (!r.ok) return;
+  templates_data = await r.json();
+  renderTemplates();
+  populateTemplateSelect();
+}
+
+function renderTemplates() {
+  const list = document.getElementById('template-list');
+  const DAY_NAMES = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  if (!templates_data.length) {
+    list.innerHTML = `<li class="text-center py-12">
+      <span aria-hidden="true" class="material-symbols-outlined text-5xl text-muted/30 mb-3 block">dashboard_customize</span>
+      <h3 class="text-base font-serif mb-1">Noch keine Templates</h3>
+      <p class="text-sm text-muted">Erstelle ein Template mit Geräteliste und Wochentagen.</p>
+    </li>`;
+    return;
+  }
+  list.innerHTML = templates_data.map(tpl => {
+    const wdLabel = tpl.allowed_weekdays && tpl.allowed_weekdays.length
+      ? tpl.allowed_weekdays.map(d => DAY_NAMES[d]).join(', ')
+      : 'Alle Tage';
+    return `<li class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-4 shadow-card">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span aria-hidden="true" class="material-symbols-outlined text-base text-accent">dashboard_customize</span>
+            <span class="font-serif text-sm truncate">${esc(tpl.name)}</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-muted font-mono">
+            <span><span aria-hidden="true" class="material-symbols-outlined text-xs align-middle mr-0.5">devices</span>${tpl.entity_ids.length} Gerät${tpl.entity_ids.length !== 1 ? 'e' : ''}</span>
+            <span><span aria-hidden="true" class="material-symbols-outlined text-xs align-middle mr-0.5">event</span>${wdLabel}</span>
+          </div>
+        </div>
+        <div class="flex gap-1.5 flex-shrink-0">
+          <button data-id="${esc(tpl.id)}" data-action="edit-template" class="px-3 py-1.5 text-xs font-display font-medium rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 transition-colors" title="Bearbeiten">
+            <span aria-hidden="true" class="material-symbols-outlined text-sm">edit</span>
+          </button>
+          <button data-id="${esc(tpl.id)}" data-name="${esc(tpl.name)}" data-action="delete-template" class="px-3 py-1.5 text-xs font-display font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Löschen">
+            <span aria-hidden="true" class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function populateTemplateSelect() {
+  const sel = document.getElementById('member-template');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Kein Template —</option>' +
+    templates_data.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+function openCreateTemplateModal() {
+  editingTemplateId = null;
+  document.getElementById('template-modal-title').textContent = 'Template erstellen';
+  document.getElementById('template-submit-btn').textContent = 'Erstellen';
+  document.getElementById('tpl-id').value = '';
+  document.getElementById('tpl-name').value = '';
+  document.getElementById('template-error').textContent = '';
+  selectedTplWeekdays = new Set();
+  renderTplWeekdayButtons();
+  templatePicker = { selected: new Set(), filter: 'all', search: '' };
+  renderPicker('template-picker', templatePicker);
+  openModal('template-modal');
+}
+
+async function openEditTemplateModal(id) {
+  const tpl = templates_data.find(t => t.id === id);
+  if (!tpl) return;
+  editingTemplateId = id;
+  document.getElementById('template-modal-title').textContent = 'Template bearbeiten';
+  document.getElementById('template-submit-btn').textContent = 'Speichern';
+  document.getElementById('tpl-id').value = id;
+  document.getElementById('tpl-name').value = tpl.name;
+  document.getElementById('template-error').textContent = '';
+  selectedTplWeekdays = new Set(tpl.allowed_weekdays || []);
+  renderTplWeekdayButtons();
+  templatePicker = { selected: new Set(tpl.entity_ids), filter: 'all', search: '' };
+  renderPicker('template-picker', templatePicker);
+  openModal('template-modal');
+}
+
+async function submitTemplate() {
+  const name = document.getElementById('tpl-name').value.trim();
+  if (!name) { document.getElementById('template-error').textContent = 'Name erforderlich'; return; }
+  const payload = {
+    name,
+    entity_ids: [...templatePicker.selected],
+    allowed_weekdays: selectedTplWeekdays.size > 0 ? [...selectedTplWeekdays].sort() : null,
+  };
+  const url = editingTemplateId
+    ? `${BASE}/admin/templates/${editingTemplateId}`
+    : `${BASE}/admin/templates`;
+  const method = editingTemplateId ? 'PUT' : 'POST';
+  const r = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    document.getElementById('template-error').textContent = data.detail || 'Fehler beim Speichern';
+    return;
+  }
+  closeModal('template-modal');
+  await loadTemplates();
+  showToast(editingTemplateId ? 'Template aktualisiert' : 'Template erstellt', 'success');
+}
+
+function toggleTplWeekday(day) {
+  day = parseInt(day);
+  if (selectedTplWeekdays.has(day)) selectedTplWeekdays.delete(day);
+  else selectedTplWeekdays.add(day);
+  renderTplWeekdayButtons();
+}
+
+function renderTplWeekdayButtons() {
+  document.querySelectorAll('#tpl-weekdays .tpl-wd-btn').forEach(btn => {
+    const d = parseInt(btn.dataset.day);
+    const active = selectedTplWeekdays.has(d);
+    btn.className = `tpl-wd-btn px-3 py-1.5 rounded-full text-xs font-display font-medium border transition-colors ${
+      active ? 'bg-primary text-white border-primary' : 'border-border-light dark:border-border-dark text-muted hover:border-primary'
+    }`;
+  });
+}
+
+// ── Members ───────────────────────────────────────────────────────────
+let members_data = [];
+let editingMemberId = null;
+let memberActiveState = true;
+
+async function loadMembers() {
+  const r = await fetch(`${BASE}/admin/members`);
+  if (!r.ok) return;
+  members_data = await r.json();
+  renderMembers();
+}
+
+function renderMembers() {
+  const list = document.getElementById('member-list');
+  if (!members_data.length) {
+    list.innerHTML = `<li class="text-center py-12">
+      <span aria-hidden="true" class="material-symbols-outlined text-5xl text-muted/30 mb-3 block">group</span>
+      <h3 class="text-base font-serif mb-1">Noch keine Mitglieder</h3>
+      <p class="text-sm text-muted">Füge Vereinsmitglieder hinzu, die sich per Login anmelden können.</p>
+    </li>`;
+    return;
+  }
+  list.innerHTML = members_data.map(m => {
+    const tplName = m.template_name || '—';
+    const activeClass = m.active ? 'bg-ink/10 text-ink' : 'bg-soot/5 dark:bg-white/5 text-muted';
+    const activeLabel = m.active ? 'Aktiv' : 'Deaktiviert';
+    const activeIcon = m.active ? 'circle' : 'cancel';
+    const activeDot = m.active ? 'pulse-dot text-ink' : 'text-muted';
+    return `<li class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-4 shadow-card ${!m.active ? 'opacity-60' : ''}">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+          <span aria-hidden="true" class="material-symbols-outlined text-primary text-xl">person</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="font-serif text-sm truncate">${esc(m.username)}</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${activeClass}">
+              <span aria-hidden="true" class="material-symbols-outlined text-xs ${activeDot}">${activeIcon}</span>
+              ${activeLabel}
+            </span>
+          </div>
+          <div class="text-xs text-muted font-mono">
+            <span aria-hidden="true" class="material-symbols-outlined text-xs align-middle mr-0.5">dashboard_customize</span>${esc(tplName)}
+          </div>
+        </div>
+        <div class="flex gap-1.5 flex-shrink-0">
+          <button data-id="${esc(m.id)}" data-action="edit-member" class="px-3 py-1.5 text-xs font-display font-medium rounded-lg border border-border-light dark:border-border-dark hover:bg-soot/5 dark:hover:bg-white/5 transition-colors" title="Bearbeiten">
+            <span aria-hidden="true" class="material-symbols-outlined text-sm">edit</span>
+          </button>
+          <button data-id="${esc(m.id)}" data-username="${esc(m.username)}" data-action="delete-member" class="px-3 py-1.5 text-xs font-display font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Löschen">
+            <span aria-hidden="true" class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function openCreateMemberModal() {
+  editingMemberId = null;
+  memberActiveState = true;
+  document.getElementById('member-modal-title').textContent = 'Mitglied anlegen';
+  document.getElementById('member-submit-btn').textContent = 'Erstellen';
+  document.getElementById('member-id').value = '';
+  document.getElementById('member-username').value = '';
+  document.getElementById('member-password').value = '';
+  document.getElementById('member-error').textContent = '';
+  document.getElementById('member-pw-hint').classList.add('hidden');
+  document.getElementById('member-active-row').classList.add('hidden');
+  populateTemplateSelect();
+  document.getElementById('member-template').value = '';
+  openModal('member-modal');
+}
+
+function openEditMemberModal(id) {
+  const m = members_data.find(x => x.id === id);
+  if (!m) return;
+  editingMemberId = id;
+  memberActiveState = m.active;
+  document.getElementById('member-modal-title').textContent = 'Mitglied bearbeiten';
+  document.getElementById('member-submit-btn').textContent = 'Speichern';
+  document.getElementById('member-id').value = id;
+  document.getElementById('member-username').value = m.username;
+  document.getElementById('member-password').value = '';
+  document.getElementById('member-error').textContent = '';
+  document.getElementById('member-pw-hint').classList.remove('hidden');
+  document.getElementById('member-active-row').classList.remove('hidden');
+  populateTemplateSelect();
+  document.getElementById('member-template').value = m.template_id || '';
+  const toggle = document.getElementById('member-active-toggle');
+  toggle.classList.toggle('on', m.active);
+  toggle.setAttribute('aria-checked', String(m.active));
+  openModal('member-modal');
+}
+
+async function submitMember() {
+  const username = document.getElementById('member-username').value.trim();
+  const password = document.getElementById('member-password').value;
+  const template_id = document.getElementById('member-template').value || null;
+  const errEl = document.getElementById('member-error');
+
+  if (!username) { errEl.textContent = 'Benutzername erforderlich'; return; }
+  if (!editingMemberId && !password) { errEl.textContent = 'Passwort erforderlich'; return; }
+  if (password && password.length < 6) { errEl.textContent = 'Passwort muss mindestens 6 Zeichen haben'; return; }
+
+  const payload = { username, template_id };
+  if (password) payload.password = password;
+  if (editingMemberId) payload.active = memberActiveState;
+
+  const url = editingMemberId ? `${BASE}/admin/members/${editingMemberId}` : `${BASE}/admin/members`;
+  const method = editingMemberId ? 'PATCH' : 'POST';
+
+  if (!editingMemberId) payload.password = password;
+
+  const r = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    errEl.textContent = data.detail || 'Fehler beim Speichern';
+    return;
+  }
+  closeModal('member-modal');
+  await loadMembers();
+  showToast(editingMemberId ? 'Mitglied aktualisiert' : 'Mitglied angelegt', 'success');
+}
 
 // ── Token List ────────────────────────────────────────────────────────
 async function loadTokens() {
@@ -755,7 +1162,9 @@ function renderPicker(containerId, pickerState) {
 }
 
 function getPickerState(containerId) {
-  return containerId === 'create-picker' ? createPicker : editPicker;
+  if (containerId === 'create-picker') return createPicker;
+  if (containerId === 'template-picker') return templatePicker;
+  return editPicker;
 }
 
 function setPickerFilter(containerId, domain) {
@@ -982,7 +1391,7 @@ function closeModal(id) {
   releaseFocus();
 }
 
-['create-modal', 'edit-modal', 'extend-modal', 'confirm-modal', 'qr-modal'].forEach(id => {
+['create-modal', 'edit-modal', 'extend-modal', 'confirm-modal', 'qr-modal', 'template-modal', 'member-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     if (e.target === e.currentTarget) {
       if (id === 'create-modal') closeCreateModal();
@@ -990,6 +1399,7 @@ function closeModal(id) {
       else if (id === 'extend-modal') closeExtendModal();
       else if (id === 'confirm-modal') closeConfirmModal();
       else if (id === 'qr-modal') closeQrModal();
+      else closeModal(id);
     }
   });
 });
@@ -1209,7 +1619,11 @@ document.addEventListener('click', e => {
 
     // Close any modal
     case 'close-modal': {
-      const modalMap = { create: closeCreateModal, edit: closeEditModal, extend: closeExtendModal, confirm: closeConfirmModal, qr: closeQrModal };
+      const modalMap = {
+        create: closeCreateModal, edit: closeEditModal, extend: closeExtendModal,
+        confirm: closeConfirmModal, qr: closeQrModal,
+        template: () => closeModal('template-modal'), member: () => closeModal('member-modal'),
+      };
       const closer = modalMap[el.dataset.modal];
       if (closer) closer();
       break;
@@ -1228,6 +1642,40 @@ document.addEventListener('click', e => {
 
     // Weekday toggle
     case 'toggle-weekday': toggleWeekday(el.dataset.day); break;
+
+    // Tab navigation
+    case 'switch-tab': switchTab(el.dataset.tab); break;
+
+    // Template actions
+    case 'open-create-template-modal': openCreateTemplateModal(); break;
+    case 'edit-template': openEditTemplateModal(el.dataset.id); break;
+    case 'submit-template': submitTemplate(); break;
+    case 'toggle-tpl-weekday': toggleTplWeekday(el.dataset.day); break;
+    case 'delete-template':
+      openConfirmModal(
+        `Template "${el.dataset.name}" löschen?`,
+        'Das Template wird entfernt. Mitglieder verlieren ihre Gerätezuweisungen.',
+        async () => { await fetch(`${BASE}/admin/templates/${el.dataset.id}`, {method:'DELETE'}); await loadTemplates(); showToast('Template gelöscht', 'success'); }
+      );
+      break;
+
+    // Member actions
+    case 'open-create-member-modal': openCreateMemberModal(); break;
+    case 'edit-member': openEditMemberModal(el.dataset.id); break;
+    case 'submit-member': submitMember(); break;
+    case 'toggle-member-active': {
+      memberActiveState = !memberActiveState;
+      el.classList.toggle('on', memberActiveState);
+      el.setAttribute('aria-checked', String(memberActiveState));
+      break;
+    }
+    case 'delete-member':
+      openConfirmModal(
+        `Mitglied "${el.dataset.username}" löschen?`,
+        'Das Mitglied und alle zugehörigen Sitzungen werden entfernt.',
+        async () => { await fetch(`${BASE}/admin/members/${el.dataset.id}`, {method:'DELETE'}); await loadMembers(); showToast('Mitglied gelöscht', 'success'); }
+      );
+      break;
   }
 });
 

@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="{{ brand_bg }}" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="{{ brand_bg_dark }}" media="(prefers-color-scheme: dark)">
-<link rel="manifest" href="{{ base_path }}/g/{{ slug }}/manifest.json" crossorigin="use-credentials">
+<link rel="manifest" href="{{ base_path }}{{ api_base }}/manifest.json" crossorigin="use-credentials">
 <link rel="apple-touch-icon" href="{{ base_path }}/static/icons/icon-192.png">
 {% endblock %}
 
@@ -88,9 +88,9 @@
 </noscript>
 
 <!-- Header -->
-<header class="sticky top-0 z-20 bg-surface-light/95 dark:bg-surface-dark/95 border-b border-border-light dark:border-border-dark backdrop-blur-lg">
+<header class="sticky top-0 z-20 bg-surface-light/95 dark:bg-black border-b border-border-light dark:border-white/10 backdrop-blur-lg">
   <!-- Club branding bar -->
-  <div class="bg-white dark:bg-black border-b border-border-light dark:border-transparent px-4 py-2 flex items-center gap-3">
+  <div class="bg-white dark:bg-transparent border-b border-border-light dark:border-white/10 px-4 py-2 flex items-center gap-3">
     <img src="{{ base_path }}/static/svl-logo.png"
          alt="SV Langschede Logo"
          class="h-9 w-auto flex-shrink-0 object-contain"
@@ -124,6 +124,11 @@
             <span aria-hidden="true" class="material-symbols-outlined text-[14px]">dark_mode</span>
           </button>
         </div>
+        {% if is_member %}
+        <button data-action="member-logout" aria-label="Abmelden" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-soot/5 dark:hover:bg-white/5 text-muted">
+          <span aria-hidden="true" class="material-symbols-outlined text-lg">logout</span>
+        </button>
+        {% endif %}
       </div>
     </div>
     <!-- Countdown timer bar -->
@@ -168,10 +173,15 @@
        class="h-16 w-auto object-contain mb-1"
        onerror="this.style.display='none'">
   <div class="w-14 h-14 rounded-full bg-soot/5 dark:bg-white/5 flex items-center justify-center">
-    <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">timer_off</span>
+    <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">{% if is_member %}lock{% else %}timer_off{% endif %}</span>
   </div>
-  <h2 class="text-2xl font-serif">Zugang abgelaufen</h2>
+  <h2 class="text-2xl font-serif">{% if is_member %}Sitzung abgelaufen{% else %}Zugang abgelaufen{% endif %}</h2>
+  {% if is_member %}
+  <p class="text-muted max-w-xs">Bitte melde dich erneut an.</p>
+  <a href="/" class="mt-2 px-6 py-3 rounded-xl bg-primary text-white text-sm font-display font-semibold">Zum Login</a>
+  {% else %}
   <p class="text-muted max-w-xs">Deine Gastsitzung ist beendet. {{ contact_message }}</p>
+  {% endif %}
 </div>
 
 <!-- Confirm bottom sheet -->
@@ -200,6 +210,8 @@ requestAnimationFrame(updateThemeToggles);
 const SLUG = {{ slug | tojson }};
 const EXPIRES_AT = {{ expires_at | tojson }};
 const NEVER_EXPIRES = {{ never_expires }};
+const API_BASE = {{ api_base | tojson }};
+const IS_MEMBER = {{ 'true' if is_member else 'false' }};
 let states = {};
 let entityOrder = [];
 let sheetCallback = null;
@@ -262,8 +274,8 @@ let expiryInterval = setInterval(() => {
 // ── Init ─────────────────────────────────────────────────────────────
 async function init() {
   try {
-    const r = await fetch(`/g/${SLUG}/state`);
-    if (r.status === 410) { showExpired(); return; }
+    const r = await fetch(`${API_BASE}/state`);
+    if (r.status === 410 || r.status === 401 || r.status === 403) { showExpired(); return; }
     if (!r.ok) throw new Error('Failed to load');
     const data = await r.json();
     states = data.states;
@@ -283,7 +295,7 @@ function connectSSE() {
   const dot = null;
   const text = null;
 
-  eventSource = new EventSource(`/g/${SLUG}/stream`);
+  eventSource = new EventSource(`${API_BASE}/stream`);
 
   eventSource.addEventListener('connected', () => {
     const wasReconnect = sseRetryCount > 0;
@@ -313,8 +325,8 @@ function connectSSE() {
 async function refetchState() {
   tempValues = {};  // Clear stale temperature cache
   try {
-    const r = await fetch(`/g/${SLUG}/state`);
-    if (r.status === 410) { showExpired(); return; }
+    const r = await fetch(`${API_BASE}/state`);
+    if (r.status === 410 || r.status === 401 || r.status === 403) { showExpired(); return; }
     if (!r.ok) return;
     const data = await r.json();
     states = data.states;
@@ -816,12 +828,12 @@ function showToast(msg, type = 'error') {
 
 async function sendCmd(entityId, domain, service, extraData = {}) {
   try {
-    const r = await fetch(`/g/${SLUG}/command`, {
+    const r = await fetch(`${API_BASE}/command`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ entity_id: entityId, service: `${domain}.${service}`, data: extraData }),
     });
-    if (r.status === 410) { showExpired(); return; }
+    if (r.status === 410 || r.status === 401) { showExpired(); return; }
     if (r.status === 429) { showToast('Zu viele Anfragen – bitte langsamer'); return; }
     if (!r.ok) showToast('Befehl fehlgeschlagen');
   } catch {
@@ -928,6 +940,9 @@ document.addEventListener('click', e => {
       break;
     case 'dismiss-install':
       dismissInstallBanner();
+      break;
+    case 'member-logout':
+      fetch('/member/logout', { method: 'POST' }).finally(() => { window.location.href = '/'; });
       break;
   }
 });

@@ -262,6 +262,164 @@ async def list_access_logs(limit: int = 50) -> list[aiosqlite.Row]:
         return await cur.fetchall()
 
 
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
+
+async def create_template(name: str, entity_ids: list[str], allowed_weekdays: list[int] | None) -> dict:
+    db = await get_db()
+    template_id = str(uuid.uuid4())
+    entity_ids = list(dict.fromkeys(entity_ids))
+    wd_json = json.dumps(sorted(set(allowed_weekdays))) if allowed_weekdays else None
+    await db.execute(
+        "INSERT INTO templates (id, name, entity_ids, allowed_weekdays) VALUES (?, ?, ?, ?)",
+        (template_id, name, json.dumps(entity_ids), wd_json),
+    )
+    await db.commit()
+    return await get_template_by_id(template_id)  # type: ignore[return-value]
+
+
+async def get_template_by_id(template_id: str) -> aiosqlite.Row | None:
+    db = await get_db()
+    async with db.execute("SELECT * FROM templates WHERE id = ?", (template_id,)) as cur:
+        return await cur.fetchone()
+
+
+async def list_templates() -> list[aiosqlite.Row]:
+    db = await get_db()
+    async with db.execute("SELECT * FROM templates ORDER BY name") as cur:
+        return await cur.fetchall()
+
+
+async def update_template(template_id: str, name: str, entity_ids: list[str], allowed_weekdays: list[int] | None) -> None:
+    db = await get_db()
+    entity_ids = list(dict.fromkeys(entity_ids))
+    wd_json = json.dumps(sorted(set(allowed_weekdays))) if allowed_weekdays else None
+    await db.execute(
+        "UPDATE templates SET name = ?, entity_ids = ?, allowed_weekdays = ? WHERE id = ?",
+        (name, json.dumps(entity_ids), wd_json, template_id),
+    )
+    await db.commit()
+
+
+async def delete_template(template_id: str) -> None:
+    db = await get_db()
+    await db.execute("DELETE FROM templates WHERE id = ?", (template_id,))
+    await db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Members
+# ---------------------------------------------------------------------------
+
+async def create_member(username: str, password_hash: str, template_id: str | None) -> aiosqlite.Row:
+    db = await get_db()
+    member_id = str(uuid.uuid4())
+    now = int(time.time())
+    await db.execute(
+        "INSERT INTO members (id, username, password_hash, template_id, active, created_at) VALUES (?, ?, ?, ?, 1, ?)",
+        (member_id, username, password_hash, template_id, now),
+    )
+    await db.commit()
+    return await get_member_by_id(member_id)  # type: ignore[return-value]
+
+
+async def get_member_by_id(member_id: str) -> aiosqlite.Row | None:
+    db = await get_db()
+    async with db.execute("SELECT * FROM members WHERE id = ?", (member_id,)) as cur:
+        return await cur.fetchone()
+
+
+async def get_member_by_username(username: str) -> aiosqlite.Row | None:
+    db = await get_db()
+    async with db.execute("SELECT * FROM members WHERE username = ?", (username,)) as cur:
+        return await cur.fetchone()
+
+
+async def list_members() -> list[aiosqlite.Row]:
+    db = await get_db()
+    async with db.execute(
+        """SELECT m.*, t.name AS template_name
+           FROM members m
+           LEFT JOIN templates t ON t.id = m.template_id
+           ORDER BY m.username"""
+    ) as cur:
+        return await cur.fetchall()
+
+
+async def update_member(
+    member_id: str,
+    *,
+    username: str | None = None,
+    password_hash: str | None = None,
+    template_id: str | None | type[...] = ...,
+    active: bool | None = None,
+) -> None:
+    db = await get_db()
+    fields: list[str] = []
+    params: list[Any] = []
+    if username is not None:
+        fields.append("username = ?")
+        params.append(username)
+    if password_hash is not None:
+        fields.append("password_hash = ?")
+        params.append(password_hash)
+    if template_id is not ...:
+        fields.append("template_id = ?")
+        params.append(template_id)
+    if active is not None:
+        fields.append("active = ?")
+        params.append(1 if active else 0)
+    if not fields:
+        return
+    params.append(member_id)
+    await db.execute(f"UPDATE members SET {', '.join(fields)} WHERE id = ?", params)
+    await db.commit()
+
+
+async def delete_member(member_id: str) -> None:
+    db = await get_db()
+    await db.execute("DELETE FROM members WHERE id = ?", (member_id,))
+    await db.commit()
+
+
+# ---------------------------------------------------------------------------
+# Member sessions
+# ---------------------------------------------------------------------------
+
+MEMBER_SESSION_TTL = 86400 * 30  # 30 days
+
+
+async def create_member_session(member_id: str) -> str:
+    db = await get_db()
+    session_id = uuid.uuid4().hex + uuid.uuid4().hex
+    now = int(time.time())
+    await db.execute(
+        "INSERT INTO member_sessions (id, member_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+        (session_id, member_id, now, now + MEMBER_SESSION_TTL),
+    )
+    await db.commit()
+    return session_id
+
+
+async def get_member_session(session_id: str) -> aiosqlite.Row | None:
+    db = await get_db()
+    async with db.execute(
+        """SELECT ms.*, m.id AS member_id, m.username, m.template_id, m.active
+           FROM member_sessions ms
+           JOIN members m ON m.id = ms.member_id
+           WHERE ms.id = ? AND ms.expires_at > ?""",
+        (session_id, int(time.time())),
+    ) as cur:
+        return await cur.fetchone()
+
+
+async def delete_member_session(session_id: str) -> None:
+    db = await get_db()
+    await db.execute("DELETE FROM member_sessions WHERE id = ?", (session_id,))
+    await db.commit()
+
+
 async def cleanup_old_data(retention_days: int) -> None:
     """Delete old access_log rows and expired admin sessions.
 
@@ -273,4 +431,5 @@ async def cleanup_old_data(retention_days: int) -> None:
     cutoff = now - (retention_days * 86400)
     await db.execute("DELETE FROM access_log WHERE timestamp < ?", (cutoff,))
     await db.execute("DELETE FROM admin_sessions WHERE expires_at < ?", (now,))
+    await db.execute("DELETE FROM member_sessions WHERE expires_at < ?", (now,))
     await db.commit()

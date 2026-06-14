@@ -17,7 +17,7 @@ from app.context import base_context
 from app.ingress import get_ingress_path
 from app.models import NEVER_EXPIRES_SECONDS
 from app.rate_limiter import rate_limiter
-from app.routers import admin, guest
+from app.routers import admin, guest, member
 
 logging.basicConfig(
     level=logging.INFO,
@@ -128,11 +128,7 @@ async def security_headers(request: Request, call_next):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(admin.router)
 app.include_router(guest.router)
-
-
-@app.get("/")
-async def root(request: Request):
-    return RedirectResponse(url=f"{request.state.ingress_path}/admin/dashboard")
+app.include_router(member.router)
 
 
 @app.get("/admin/dashboard", include_in_schema=False)

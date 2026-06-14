@@ -1,10 +1,12 @@
 """Admin API router."""
+import asyncio
 import ipaddress
 import json
 import secrets
 import time
 from typing import Any
 
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 
 from app import database as db
@@ -13,8 +15,12 @@ from app.config import settings
 from app import ha_client
 from app.models import (
     AdminLoginRequest,
+    MemberCreateRequest,
+    MemberUpdateRequest,
     NEVER_EXPIRES_SECONDS,
     SUPPORTED_DOMAINS,
+    TemplateCreateRequest,
+    TemplateUpdateRequest,
     TokenCreateRequest,
     TokenUpdateEntitiesRequest,
     TokenUpdateExpiryRequest,
@@ -270,6 +276,193 @@ async def delete_token(token_id: str, _: str = Depends(require_admin)) -> dict:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     await ha_client.broadcast_token_expired(token_id)
     await db.delete_token(token_id)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Template management
+# ---------------------------------------------------------------------------
+
+def _template_to_response(row: Any) -> dict:
+    wd_raw = row["allowed_weekdays"]
+    wd_list = json.loads(wd_raw) if wd_raw else None
+    ei_raw = row["entity_ids"]
+    ei_list = json.loads(ei_raw) if ei_raw else []
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "entity_ids": ei_list,
+        "allowed_weekdays": wd_list,
+    }
+
+
+def _validate_weekdays(days: list[int] | None) -> None:
+    if days is None:
+        return
+    for d in days:
+        if d < 0 or d > 6:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Wochentage müssen zwischen 0 (Mo) und 6 (So) liegen",
+            )
+
+
+@router.get("/templates")
+async def list_templates(_: str = Depends(require_admin)) -> list[dict]:
+    rows = await db.list_templates()
+    return [_template_to_response(r) for r in rows]
+
+
+@router.post("/templates", status_code=status.HTTP_201_CREATED)
+async def create_template(body: TemplateCreateRequest, _: str = Depends(require_admin)) -> dict:
+    _validate_weekdays(body.allowed_weekdays)
+    row = await db.create_template(body.name, body.entity_ids, body.allowed_weekdays)
+    return _template_to_response(row)
+
+
+@router.get("/templates/{template_id}")
+async def get_template(template_id: str, _: str = Depends(require_admin)) -> dict:
+    row = await db.get_template_by_id(template_id)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return _template_to_response(row)
+
+
+@router.put("/templates/{template_id}")
+async def update_template(
+    template_id: str, body: TemplateUpdateRequest, _: str = Depends(require_admin)
+) -> dict:
+    row = await db.get_template_by_id(template_id)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    _validate_weekdays(body.allowed_weekdays)
+    await db.update_template(template_id, body.name, body.entity_ids, body.allowed_weekdays)
+    row = await db.get_template_by_id(template_id)
+    return _template_to_response(row)
+
+
+@router.delete("/templates/{template_id}")
+async def delete_template(template_id: str, _: str = Depends(require_admin)) -> dict:
+    row = await db.get_template_by_id(template_id)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    await db.delete_template(template_id)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Member management
+# ---------------------------------------------------------------------------
+
+def _member_to_response(row: Any) -> dict:
+    return {
+        "id": row["id"],
+        "username": row["username"],
+        "template_id": row["template_id"],
+        "template_name": row["template_name"] if "template_name" in row.keys() else None,
+        "active": bool(row["active"]),
+        "created_at": row["created_at"],
+    }
+
+
+def _hash_password(plain: str) -> str:
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(
+            asyncio.get_event_loop().run_in_executor(
+                None, lambda: bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+            )
+        )
+    finally:
+        loop.close()
+
+
+async def _async_hash_password(plain: str) -> str:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None, lambda: bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+    )
+
+
+@router.get("/members")
+async def list_members(_: str = Depends(require_admin)) -> list[dict]:
+    rows = await db.list_members()
+    return [_member_to_response(r) for r in rows]
+
+
+@router.post("/members", status_code=status.HTTP_201_CREATED)
+async def create_member(body: MemberCreateRequest, _: str = Depends(require_admin)) -> dict:
+    if body.template_id:
+        tpl = await db.get_template_by_id(body.template_id)
+        if not tpl:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template nicht gefunden")
+
+    existing = await db.get_member_by_username(body.username)
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Benutzername '{body.username}' bereits vergeben")
+
+    pw_hash = await _async_hash_password(body.password)
+    row = await db.create_member(body.username, pw_hash, body.template_id)
+    # fetch with template name
+    rows = await db.list_members()
+    for r in rows:
+        if r["id"] == row["id"]:
+            return _member_to_response(r)
+    return _member_to_response(row)
+
+
+@router.get("/members/{member_id}")
+async def get_member(member_id: str, _: str = Depends(require_admin)) -> dict:
+    rows = await db.list_members()
+    for r in rows:
+        if r["id"] == member_id:
+            return _member_to_response(r)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.patch("/members/{member_id}")
+async def update_member(
+    member_id: str, body: MemberUpdateRequest, _: str = Depends(require_admin)
+) -> dict:
+    row = await db.get_member_by_id(member_id)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if body.template_id is not None:
+        tpl = await db.get_template_by_id(body.template_id)
+        if not tpl:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template nicht gefunden")
+
+    if body.username is not None:
+        existing = await db.get_member_by_username(body.username)
+        if existing and existing["id"] != member_id:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Benutzername bereits vergeben")
+
+    pw_hash = await _async_hash_password(body.password) if body.password else None
+
+    # Distinguish "not provided" from "set to None" for template_id
+    template_id_sentinel = ... if body.template_id is None and "template_id" not in body.model_fields_set else body.template_id
+
+    await db.update_member(
+        member_id,
+        username=body.username,
+        password_hash=pw_hash,
+        template_id=template_id_sentinel,
+        active=body.active,
+    )
+    rows = await db.list_members()
+    for r in rows:
+        if r["id"] == member_id:
+            return _member_to_response(r)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.delete("/members/{member_id}")
+async def delete_member(member_id: str, _: str = Depends(require_admin)) -> dict:
+    row = await db.get_member_by_id(member_id)
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    await db.delete_member(member_id)
     return {"ok": True}
 
 

@@ -69,3 +69,41 @@ class TokenResponse(BaseModel):
     ip_allowlist: list[str] | None
     entity_count: int
     entity_ids: list[str] | None = None
+
+
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
+
+class TemplateCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    entity_ids: list[str] = Field(default_factory=list)
+    allowed_weekdays: list[int] | None = Field(default=None, description="0=Mo,1=Di,...,6=So — None means all days")
+
+
+class TemplateUpdateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    entity_ids: list[str] = Field(default_factory=list)
+    allowed_weekdays: list[int] | None = None
+
+
+# ---------------------------------------------------------------------------
+# Members
+# ---------------------------------------------------------------------------
+
+class MemberCreateRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=100, pattern=r"^[^\s]+$")
+    password: str = Field(..., min_length=6)
+    template_id: str | None = None
+
+
+class MemberUpdateRequest(BaseModel):
+    username: str | None = Field(default=None, min_length=1, max_length=100, pattern=r"^[^\s]+$")
+    password: str | None = Field(default=None, min_length=6)
+    template_id: str | None | str = None
+    active: bool | None = None
+
+
+class MemberLoginRequest(BaseModel):
+    username: str
+    password: str
