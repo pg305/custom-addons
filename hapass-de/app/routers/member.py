@@ -22,6 +22,7 @@ from app.models import (
     CommandRequest,
     FORBIDDEN_DATA_KEYS,
     MemberLoginRequest,
+    NEVER_EXPIRES_SECONDS,
 )
 from app.ingress import is_ingress_request
 from app.rate_limiter import RateLimiter, rate_limiter
@@ -177,9 +178,9 @@ async def member_pwa(request: Request):
     ctx.update({
         "slug": "",
         "label": row["username"],
-        "expires_at": 0,
+        "expires_at": NEVER_EXPIRES_SECONDS,
         "contact_message": settings.contact_message,
-        "never_expires": 1,
+        "never_expires": NEVER_EXPIRES_SECONDS,
         "api_base": "/me",
         "is_member": True,
     })

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2] – 2026-06-14
+
+### Bugfix
+- Mitglieder-PWA zeigte sofort "Abgelaufen" und lud keine Geräte — `expires_at` war auf 0 gesetzt, JS-Ablaufcheck löste fälschlicherweise aus
+
+---
+
 ## [0.4.1] – 2026-06-14
 
 ### Bugfix
