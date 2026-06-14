@@ -91,7 +91,7 @@
 <header class="sticky top-0 z-20 bg-surface-light/95 dark:bg-surface-dark/95 border-b border-border-light dark:border-border-dark backdrop-blur-lg">
   <!-- Club branding bar -->
   <div class="bg-black px-4 py-2 flex items-center gap-3">
-    <img src="https://www.sv-langschede.de/wp-content/uploads/2020/01/cropped-SV-DIGITAL_kreis_4c_trans-01.png"
+    <img src="{{ base_path }}/static/svl-logo.png"
          alt="SV Langschede Logo"
          class="w-8 h-8 rounded-full object-cover flex-shrink-0"
          onerror="this.style.display='none'">
@@ -168,9 +168,9 @@
 
 <!-- Expired overlay -->
 <div id="expired-overlay" aria-live="assertive" class="hidden fixed inset-0 z-50 bg-bg-light dark:bg-bg-dark flex flex-col items-center justify-center text-center p-8 gap-3">
-  <img src="https://www.sv-langschede.de/wp-content/uploads/2020/01/cropped-SV-DIGITAL_kreis_4c_trans-01.png"
+  <img src="{{ base_path }}/static/svl-logo.png"
        alt="SV Langschede"
-       class="w-16 h-16 rounded-full object-cover bg-black mb-1"
+       class="w-16 h-16 rounded-full object-cover mb-1"
        onerror="this.style.display='none'">
   <div class="w-14 h-14 rounded-full bg-soot/5 dark:bg-white/5 flex items-center justify-center">
     <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">timer_off</span>
@@ -436,7 +436,10 @@ function formatState(domain, stateStr, state) {
     if (stateStr === 'idle') return 'Inaktiv';
   }
   if (domain === 'lock') return stateStr === 'locked' ? 'Gesperrt' : 'Entsperrt';
-  if (domain === 'cover') return esc(stateStr.charAt(0).toUpperCase() + stateStr.slice(1));
+  if (domain === 'cover') {
+    const coverStates = {open:'Geöffnet', closed:'Geschlossen', opening:'Öffnet…', closing:'Schließt…', stopped:'Gestoppt'};
+    return coverStates[stateStr] || esc(stateStr);
+  }
   if (domain === 'fan') {
     const pct = state.attributes?.percentage;
     if (stateStr === 'on' && pct != null) return `An · ${pct}%`;
@@ -536,12 +539,12 @@ function buildLockControls(eid, state) {
       ? 'border-primary/30 text-primary bg-primary/5'
       : 'border-ink/30 text-ink bg-ink/5'}">
     <span aria-hidden="true" class="material-symbols-outlined text-lg">${locked ? 'lock' : 'lock_open'}</span>
-    ${locked ? 'Tippen zum Entsperren' : 'Tippen zum Sperren'}
+    ${locked ? 'Aufschließen' : 'Abschließen'}
   </button>
   ${supportsOpen ? `<button data-action="confirm-lock-open" data-eid="${esc(eid)}"
     class="w-full py-3 rounded-xl border-2 border-accent/30 text-accent bg-accent/5 font-display font-semibold text-sm flex items-center justify-center gap-2 transition-colors active:scale-[0.98]">
     <span aria-hidden="true" class="material-symbols-outlined text-lg">meeting_room</span>
-    Öffnen
+    Tür öffnen
   </button>` : ''}
   </div>`;
 }
