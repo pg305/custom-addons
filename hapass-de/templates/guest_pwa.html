@@ -124,9 +124,6 @@
             <span aria-hidden="true" class="material-symbols-outlined text-[14px]">dark_mode</span>
           </button>
         </div>
-        <span id="conn-badge" class="hidden" aria-live="polite"></span>
-        <span id="conn-dot" class="hidden"></span>
-        <span id="conn-text" class="hidden"></span>
       </div>
     </div>
     <!-- Countdown timer bar -->
@@ -282,20 +279,14 @@ async function init() {
 // ── SSE ──────────────────────────────────────────────────────────────
 let eventSource = null;
 function connectSSE() {
-  const badge = document.getElementById('conn-badge');
-  const dot = document.getElementById('conn-dot');
-  const text = document.getElementById('conn-text');
-  badge.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500';
-  dot.className = 'w-1.5 h-1.5 rounded-full bg-current';
-  text.textContent = 'Verbinde';
+  const badge = null;
+  const dot = null;
+  const text = null;
 
   eventSource = new EventSource(`/g/${SLUG}/stream`);
 
   eventSource.addEventListener('connected', () => {
     const wasReconnect = sseRetryCount > 0;
-    badge.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-ink/10 text-ink';
-    dot.className = 'w-1.5 h-1.5 rounded-full bg-current ping-dot';
-    text.textContent = 'Live'; // "Live" bleibt auf Deutsch gleich
     sseRetryCount = 0;
     if (wasReconnect) refetchState();
   });
@@ -314,9 +305,6 @@ function connectSSE() {
   });
 
   eventSource.onerror = () => {
-    badge.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-primary/10 text-primary';
-    dot.className = 'w-1.5 h-1.5 rounded-full bg-current';
-    text.textContent = 'Offline'; // "Offline" bleibt auf Deutsch gleich
     sseRetryCount++;
   };
 
