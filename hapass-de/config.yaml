@@ -1,5 +1,5 @@
 name: HAPass Deutsch
-version: "0.2.7"
+version: "0.2.8"
 slug: ha-pass-de
 description: Teilbare Gäste-Links zur Steuerung von Home Assistant Geräten (Deutsche Version)
 url: "https://github.com/rohithkadaveru/ha-pass"
@@ -7,12 +7,15 @@ arch: [amd64, aarch64]
 startup: application
 boot: auto
 homeassistant_api: true
-host_network: true
 ingress: true
 ingress_port: 5880
 panel_icon: "mdi:shield-key"
 panel_title: "HAPass DE"
-webui: "http://[HOST]:5880/admin/dashboard"
+webui: "http://[HOST]:[PORT:5880]/admin/dashboard"
+ports:
+  "5880/tcp": 5880
+ports_description:
+  "5880/tcp": "HAPass Gäste-Links (Direktzugriff)"
 backup: cold
 options:
   admin_username: ""
