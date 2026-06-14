@@ -11,11 +11,11 @@ ingress: true
 ingress_port: 5880
 panel_icon: "mdi:shield-key"
 panel_title: "HAPass DE"
-webui: "http://[HOST]:[PORT:5881]/admin/dashboard"
+webui: "http://[HOST]:[PORT:5880]/admin/dashboard"
 ports:
-  "5881/tcp": 5880
+  "5880/tcp": 5880
 ports_description:
-  "5881/tcp": "HAPass Gäste-Links (Direktzugriff)"
+  "5880/tcp": "HAPass Gäste-Links (Direktzugriff)"
 backup: cold
 options:
   admin_username: ""
