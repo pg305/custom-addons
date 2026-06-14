@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] – 2026-06-14
+
+### Bugfix
+- HA-Ingress: `/` leitet wieder direkt zum Admin-Dashboard weiter (kein Login nötig wenn über HA Seitenleiste geöffnet)
+
+---
+
 ## [0.4.0] – 2026-06-14
 
 ### Neu: Mitgliederzugang & Templates
