@@ -23,6 +23,7 @@ from app.models import (
     FORBIDDEN_DATA_KEYS,
     MemberLoginRequest,
 )
+from app.ingress import is_ingress_request
 from app.rate_limiter import RateLimiter, rate_limiter
 from app.routers.guest import (
     _get_cached_states,
@@ -114,9 +115,12 @@ async def _validate_member_access(member_row) -> list[str]:
 
 @router.get("/", response_class=HTMLResponse)
 async def member_login_page(request: Request):
+    # Via HA Ingress: Admin-Panel direkt ohne Login (wie vorher)
+    if is_ingress_request(request):
+        return RedirectResponse(url=f"{request.state.ingress_path}/admin/dashboard", status_code=302)
     row, _ = await _get_member_from_request(request)
     if row:
-        return RedirectResponse(url=f"{request.state.ingress_path}/me", status_code=302)
+        return RedirectResponse(url="/me", status_code=302)
     ctx = base_context(request)
     ctx["contact_message"] = settings.contact_message
     return templates.TemplateResponse(request, "member_login.html", ctx)
