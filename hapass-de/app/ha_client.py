@@ -88,6 +88,15 @@ async def subscribe(token_id: str) -> asyncio.Queue:
     return q
 
 
+async def subscribe_with_entities(sub_id: str, entity_ids: list[str]) -> asyncio.Queue:
+    """Register an SSE queue with a pre-known entity list (used for members)."""
+    q: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_SIZE)
+    async with _sub_lock:
+        _entity_cache[sub_id] = set(entity_ids)
+        _subscriptions.setdefault(sub_id, set()).add(q)
+    return q
+
+
 async def unsubscribe(token_id: str, q: asyncio.Queue) -> None:
     async with _sub_lock:
         subs = _subscriptions.get(token_id)

@@ -32,6 +32,8 @@ from app.routers.guest import (
     COMMAND_RPM,
 )
 
+MEMBER_SUB_PREFIX = "member:"
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="templates")
@@ -226,9 +228,9 @@ async def member_state(request: Request):
     return {"entities": entity_ids, "states": states}
 
 
-async def _member_event_generator(member_id: str, request: Request) -> AsyncIterator[str]:
-    # Reuse the guest SSE infrastructure with member_id as subscription key
-    q = await ha_client.subscribe(member_id)
+async def _member_event_generator(member_id: str, entity_ids: list[str], request: Request) -> AsyncIterator[str]:
+    sub_id = f"{MEMBER_SUB_PREFIX}{member_id}"
+    q = await ha_client.subscribe_with_entities(sub_id, entity_ids)
     try:
         yield f"event: connected\ndata: {{\"ws_healthy\": {str(ha_client.is_ws_healthy()).lower()}}}\n\n"
         while True:
@@ -244,14 +246,15 @@ async def _member_event_generator(member_id: str, request: Request) -> AsyncIter
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
     finally:
-        await ha_client.unsubscribe(member_id, q)
+        await ha_client.unsubscribe(sub_id, q)
 
 
 @router.get("/me/stream")
 async def member_stream(request: Request):
     row = await _require_member(request)
+    entity_ids = await _validate_member_access(row)
     return StreamingResponse(
-        _member_event_generator(row["member_id"], request),
+        _member_event_generator(row["member_id"], entity_ids, request),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
