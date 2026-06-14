@@ -332,7 +332,7 @@ async def get_member_by_id(member_id: str) -> aiosqlite.Row | None:
 
 async def get_member_by_username(username: str) -> aiosqlite.Row | None:
     db = await get_db()
-    async with db.execute("SELECT * FROM members WHERE username = ?", (username,)) as cur:
+    async with db.execute("SELECT * FROM members WHERE LOWER(username) = LOWER(?)", (username,)) as cur:
         return await cur.fetchone()
 
 
