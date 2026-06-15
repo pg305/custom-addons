@@ -30,6 +30,8 @@ from app.rate_limiter import RateLimiter, rate_limiter
 from app.routers.guest import (
     _get_cached_states,
     _client_ip,
+    _fire_activity_event,
+    _activity_payload,
     SSE_KEEPALIVE_SECONDS,
     _ALLOWED_SSE_EVENTS,
     COMMAND_RPM,
@@ -362,5 +364,25 @@ async def member_command(body: CommandRequest, background_tasks: BackgroundTasks
         await ha_client.call_service(entity_domain, svc_name, service_data)
     except (httpx.HTTPStatusError, Exception):
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Service-Aufruf fehlgeschlagen")
+
+    await db.log_access(
+        token_id=None,
+        event_type="command",
+        ip_address=_client_ip(request),
+        user_agent=request.headers.get("User-Agent"),
+        entity_id=body.entity_id,
+        service=body.service,
+        member_label=row["username"],
+    )
+    background_tasks.add_task(
+        _fire_activity_event,
+        {
+            "schema_version": 1,
+            "activity": "command",
+            "token_label": row["username"],
+            "target_entity_id": body.entity_id,
+            "service": f"{entity_domain}.{svc_name}",
+        },
+    )
 
     return {"ok": True}

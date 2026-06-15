@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.7] – 2026-06-15
+
+### Neu: Login-Seite Verbesserungen
+- Logo und App-Name auf der Login-Seite sind klickbare Links zu `sv-langschede.de`
+- Neuer prominenter Button "Zurück zur Webseite" unterhalb des Login-Formulars
+
+---
+
+## [0.4.6] – 2026-06-15
+
+### Neu: Mitglieder-Aktivität in der History
+- Aktionen von Mitgliedern (Geräte schalten etc.) werden jetzt im Activity-Tab des Admin-Dashboards angezeigt
+- Mitglieder-Befehle lösen außerdem einen HA-Logbuch-Eintrag und ein `ha_pass_activity`-Event aus
+- Neue DB-Migration (006): Spalte `member_label` in `access_log`-Tabelle ergänzt
+- `list_access_logs` nutzt `COALESCE(token_label, member_label)` — zeigt sowohl Gast- als auch Mitglieder-Einträge
+
+---
+
 ## [0.4.5] – 2026-06-15
 
 ### Verbesserungen

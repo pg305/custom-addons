@@ -230,21 +230,22 @@ async def touch_token(token_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 async def log_access(
-    token_id: str,
+    token_id: str | None,
     event_type: str,
     ip_address: str | None = None,
     user_agent: str | None = None,
     entity_id: str | None = None,
     service: str | None = None,
+    member_id: str | None = None,
+    member_label: str | None = None,
 ) -> None:
     db = await get_db()
     await db.execute(
         """INSERT INTO access_log
-           (token_id, timestamp, event_type, entity_id, service, ip_address, user_agent)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (token_id, int(time.time()), event_type, entity_id, service, ip_address, user_agent),
+           (token_id, timestamp, event_type, entity_id, service, ip_address, user_agent, member_label)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (token_id, int(time.time()), event_type, entity_id, service, ip_address, user_agent, member_label),
     )
-    # Single-write commit is acceptable at homelab scale; batch for high throughput
     await db.commit()
 
 
@@ -252,7 +253,8 @@ async def list_access_logs(limit: int = 50) -> list[aiosqlite.Row]:
     db = await get_db()
     async with db.execute(
         """SELECT al.timestamp, al.event_type, al.entity_id, al.service,
-                  al.ip_address, t.label AS token_label
+                  al.ip_address,
+                  COALESCE(t.label, al.member_label) AS token_label
            FROM access_log al
            LEFT JOIN tokens t ON t.id = al.token_id
            ORDER BY al.timestamp DESC, al.id DESC

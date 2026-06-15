@@ -39,14 +39,16 @@
   <div class="w-full max-w-sm">
     <!-- Club branding -->
     <div class="flex flex-col items-center mb-8 gap-3">
-      <img src="{{ base_path }}/static/svl-logo.png"
-           alt="SV Langschede Logo"
-           class="h-16 w-auto object-contain"
-           onerror="this.style.display='none'">
-      <div class="text-center">
-        <div class="text-base font-bold uppercase tracking-widest">{{ app_name }}</div>
-        <div class="text-xs text-muted font-mono mt-0.5">Mitgliederzugang</div>
-      </div>
+      <a href="https://www.sv-langschede.de" target="_blank" rel="noopener" class="flex flex-col items-center gap-3">
+        <img src="{{ base_path }}/static/svl-logo.png"
+             alt="SV Langschede Logo"
+             class="h-16 w-auto object-contain"
+             onerror="this.style.display='none'">
+        <div class="text-center">
+          <div class="text-base font-bold uppercase tracking-widest">{{ app_name }}</div>
+          <div class="text-xs text-muted font-mono mt-0.5">Mitgliederzugang</div>
+        </div>
+      </a>
     </div>
 
     <!-- Login card -->
@@ -82,6 +84,13 @@
 
       <p class="text-xs text-muted text-center mt-5 leading-relaxed">{{ contact_message }}</p>
     </div>
+
+    <!-- Back to website -->
+    <a href="https://www.sv-langschede.de" target="_blank" rel="noopener"
+       class="mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-sm font-display font-semibold text-muted hover:text-soot dark:hover:text-gray-100 hover:border-primary/30 transition-colors">
+      <span aria-hidden="true" class="material-symbols-outlined text-base">arrow_back</span>
+      Zurück zur Webseite
+    </a>
   </div>
 </div>
 
