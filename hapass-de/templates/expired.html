@@ -22,13 +22,20 @@
          onerror="this.style.display='none'">
     <p class="text-xs font-mono uppercase tracking-widest text-muted mb-6">SV Langschede 1911 e.V.</p>
     <div class="w-16 h-16 rounded-full bg-soot/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
-      <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">timer_off</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-3xl text-muted">{% if reason == 'wrong_day' %}event_busy{% else %}timer_off{% endif %}</span>
     </div>
-    <h1 class="text-2xl font-serif tracking-tight mb-2">Zugang abgelaufen</h1>
-    <p class="text-muted text-base leading-relaxed max-w-xs mx-auto">Diese Gastsitzung ist beendet oder der Link ist nicht mehr gültig. {{ contact_message }}</p>
+    <h1 class="text-2xl font-serif tracking-tight mb-2">{% if reason == 'wrong_day' %}Heute kein Zugang{% else %}Zugang abgelaufen{% endif %}</h1>
+    <p class="text-muted text-base leading-relaxed max-w-xs mx-auto">{% if reason == 'wrong_day' %}Dieser Zugang ist heute nicht verfügbar. Bitte versuche es an einem anderen Tag.{% else %}Diese Gastsitzung ist beendet oder der Link ist nicht mehr gültig. {{ contact_message }}{% endif %}</p>
   </div>
 {% endblock %}
 
 {% block body_scripts %}
 <script src="{{ base_path }}/static/theme.js"></script>
+<script>
+history.replaceState(null, '', location.href);
+history.pushState(null, '', location.href);
+window.addEventListener('popstate', function() {
+  history.pushState(null, '', location.href);
+});
+</script>
 {% endblock %}

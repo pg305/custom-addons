@@ -185,17 +185,17 @@ def _schedule_page_load_activity(background_tasks: BackgroundTasks, row) -> None
 @router.get("/{slug}", response_class=HTMLResponse)
 async def guest_pwa(background_tasks: BackgroundTasks, request: Request, slug: str = Path(max_length=64)):
     row = await db.get_token_by_slug(slug)
-    expired = False
     import datetime as _dt
     _today = _dt.datetime.now().weekday()
+    reason = None
     if not row or row["revoked"] or row["expires_at"] <= int(time.time()):
-        expired = True
+        reason = "expired"
     elif row["allowed_weekdays"] and _today not in json.loads(row["allowed_weekdays"]):
-        expired = True
+        reason = "wrong_day"
 
-    if expired:
+    if reason:
         ctx = base_context(request)
-        ctx.update({"slug": slug, "contact_message": settings.contact_message})
+        ctx.update({"slug": slug, "contact_message": settings.contact_message, "reason": reason})
         return templates.TemplateResponse(request, "expired.html", ctx, status_code=410)
 
     try:

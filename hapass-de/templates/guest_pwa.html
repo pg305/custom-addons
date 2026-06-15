@@ -91,21 +91,25 @@
 <header class="sticky top-0 z-20 bg-surface-light/95 dark:bg-black border-b border-border-light dark:border-white/10 backdrop-blur-lg">
   <!-- Club branding bar -->
   <div class="bg-white dark:bg-transparent border-b border-border-light dark:border-white/10 px-4 py-2 flex items-center gap-3">
-    <img src="{{ base_path }}/static/svl-logo.png"
-         alt="SV Langschede Logo"
-         class="h-9 w-auto flex-shrink-0 object-contain"
-         onerror="this.style.display='none'">
-    <div class="flex-1 min-w-0">
-      <div class="text-black dark:text-yellow-400 text-xs font-bold uppercase tracking-widest truncate">SV Langschede 1911 e.V.</div>
-      <div class="text-black/50 dark:text-yellow-400/60 text-[10px] font-mono">Die Helden von der Ruhr</div>
-    </div>
+    <a href="https://www.sv-langschede.de" target="_blank" rel="noopener" class="flex items-center gap-3 flex-1 min-w-0">
+      <img src="{{ base_path }}/static/svl-logo.png"
+           alt="SV Langschede Logo"
+           class="h-9 w-auto flex-shrink-0 object-contain"
+           onerror="this.style.display='none'">
+      <div class="flex-1 min-w-0">
+        <div class="text-black dark:text-yellow-400 text-xs font-bold uppercase tracking-widest truncate">SV Langschede 1911 e.V.</div>
+        <div class="text-black/50 dark:text-yellow-400/60 text-[10px] font-mono">Die Helden von der Ruhr</div>
+      </div>
+    </a>
+    <a href="https://www.sv-langschede.de" target="_blank" rel="noopener"
+       class="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider text-black/50 dark:text-yellow-400/60 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+      <span aria-hidden="true" class="material-symbols-outlined text-sm">open_in_new</span>
+      Webseite
+    </a>
   </div>
   <div class="px-4 py-3">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3 flex-1 min-w-0">
-        <div class="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 border-2 border-primary/30">
-          <span aria-hidden="true" class="material-symbols-outlined text-primary text-xl">person</span>
-        </div>
         <div class="min-w-0">
           <div class="text-sm font-serif truncate">{{ label }}</div>
         </div>
@@ -378,6 +382,11 @@ async function refetchState() {
 }
 
 function showExpired() {
+  history.replaceState(null, '', location.href);
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', function() {
+    history.pushState(null, '', location.href);
+  });
   const el = document.getElementById('expired-overlay');
   el.classList.remove('hidden');
   el.classList.add('flex');
