@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.5] – 2026-06-15
+
+### Verbesserungen
+- **Kein Ablaufdatum**: Zeile im Admin-Dashboard und Countdown-Leiste im Gast-PWA werden komplett ausgeblendet, wenn kein Ablaufdatum gesetzt ist
+- **Desktop-Layout**: Geräte-Karten werden auf größeren Bildschirmen in zwei Spalten nebeneinander angezeigt (auf Mobilgeräten weiterhin einspaltig)
+- **Zurück-Navigation gesperrt**: Nach Ablauf einer Sitzung verhindert `history.pushState` das Zurücknavigieren zur aktiven Ansicht (betrifft PWA-Overlay und statische Ablauf-Seite)
+- **Wochentag-Fehlermeldung**: Zugriff an einem nicht erlaubten Wochentag zeigt eigene Meldung "Heute kein Zugang" mit passendem Icon statt generischer Ablaufmeldung
+- **Logo-Link**: Logo und Vereinsname im Gast-PWA-Header sind klickbare Links zu `sv-langschede.de`
+- **Webseite-Button**: Direktlink zur Vereinswebseite im Header ergänzt
+- **Profilicon entfernt**: Kreisförmiges Personen-Icon neben dem Token-Namen wurde entfernt
+
+---
+
+## [0.4.4] – 2026-06-15
+
+### Änderungen
+- Interne Versionsnummer angepasst
+
+---
+
 ## [0.4.3] – 2026-06-15
 
 ### Neu: Optionaler Passwortdialog bei Erstanmeldung

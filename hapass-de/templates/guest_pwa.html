@@ -163,7 +163,7 @@
 </div>
 
 <!-- Cards container -->
-<main id="cards-container" class="max-w-xl mx-auto px-4 pt-3 pb-8">
+<main id="cards-container" class="max-w-4xl mx-auto px-4 pt-3 pb-8">
   <div class="flex flex-col items-center justify-center py-16 text-muted">
     <div class="w-6 h-6 border-2 border-border-light dark:border-border-dark border-t-accent rounded-full spinner mb-3"></div>
     <span class="text-sm">Lade Geräte...</span>
@@ -269,9 +269,7 @@ const INITIAL_REMAINING = EXPIRES_AT - (Date.now() / 1000);
 function updateExpiry() {
   if (EXPIRES_AT >= NEVER_EXPIRES) {
     const section = document.getElementById('expiry-section');
-    if (section) {
-      section.innerHTML = '<span class="text-xs text-muted font-mono">Kein Ablauf</span>';
-    }
+    if (section) section.style.display = 'none';
     return;
   }
   const el = document.getElementById('expiry-timer');
@@ -414,12 +412,12 @@ function renderAll() {
     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
   });
 
-  let html = '';
+  let html = '<div class="grid grid-cols-1 md:grid-cols-2 md:gap-x-4">';
   for (const domain of sortedDomains) {
     const label = DOMAIN_LABELS[domain] || (domain.charAt(0).toUpperCase() + domain.slice(1));
     const icon = DOMAIN_ICONS[domain] || 'devices';
     const color = DOMAIN_COLORS[domain] || { text: 'text-muted' };
-    html += `<div class="flex items-center gap-2 pt-5 pb-2 px-1">
+    html += `<div class="flex items-center gap-2 pt-5 pb-2 px-1 md:col-span-2">
       <span aria-hidden="true" class="material-symbols-outlined text-base ${color.text}">${icon}</span>
       <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-muted">${esc(label)}</span>
     </div>`;
@@ -427,6 +425,7 @@ function renderAll() {
       html += buildCard(eid, states[eid]);
     }
   }
+  html += '</div>';
   container.innerHTML = html;
 }
 
