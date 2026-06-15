@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.8] – 2026-06-15
+
+### Fix: Dark Mode Header
+- Header-Hintergrund im Darkmode war reines Schwarz (`#000`) — jetzt `surface-dark` (`#2A201C`), passend zum restlichen Theme
+- Vereins-Branding-Leiste im Darkmode nutzt jetzt `bg-dark/40` statt transparentem Hintergrund für einen cleanen Übergang
+- Trennlinie im Darkmode verwendet `border-dark` statt `white/10` für mehr Konsistenz
+
+---
+
 ## [0.4.7] – 2026-06-15
 
 ### Neu: Login-Seite Verbesserungen
